@@ -8,7 +8,7 @@
 <meta name="viewport"
 content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-<title>AR Model Viewer</title>
+<title>AR Viewer</title>
 
 
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -28,11 +28,11 @@ height:100%;
 
 overflow:hidden;
 
+background:#000;
+
 font-family:
 Arial,
 sans-serif;
-
-background:black;
 
 }
 
@@ -40,7 +40,6 @@ background:black;
 #ui{
 
 position:fixed;
-
 inset:0;
 
 z-index:10;
@@ -73,8 +72,7 @@ justify-content:space-between;
 
 .status{
 
-background:
-rgba(0,0,0,.75);
+background:rgba(0,0,0,.75);
 
 padding:15px 20px;
 
@@ -94,16 +92,20 @@ height:12px;
 
 border-radius:50%;
 
-background:#ffcc00;
+background:#ffc400;
 
 margin-right:10px;
 
 }
 
 
+
 .dot.active{
 
-background:#00ff55;
+background:#00ff66;
+
+box-shadow:
+0 0 15px #00ff66;
 
 }
 
@@ -113,15 +115,15 @@ background:#00ff55;
 
 pointer-events:auto;
 
+border:0;
+
 width:45px;
 
 height:45px;
 
 border-radius:50%;
 
-border:none;
-
-background:black;
+background:#222;
 
 color:white;
 
@@ -141,12 +143,11 @@ right:20px;
 
 bottom:40px;
 
-background:
-rgba(0,0,0,.75);
+padding:20px;
 
 border-radius:20px;
 
-padding:20px;
+background:rgba(0,0,0,.75);
 
 text-align:center;
 
@@ -175,18 +176,15 @@ text-align:center;
 <span id="dot" class="dot"></span>
 
 <span id="status">
-
 ПОИСК ТРИГГЕРА
-
 </span>
+
 
 </div>
 
 
 <button class="help">
-
 ?
-
 </button>
 
 
@@ -194,27 +192,24 @@ text-align:center;
 
 
 
+
 <div class="message">
 
-
 <h3 id="title">
-
 Наведите камеру на изображение
-
 </h3>
 
-
 <p id="subtitle">
-
-Ожидание AR объекта
-
+Ожидание модели
 </p>
 
+</div>
+
+
 
 </div>
 
 
-</div>
 
 
 
@@ -279,11 +274,12 @@ intensity="2">
 
 type="directional"
 
-position="0 2 1"
+position="1 2 1"
 
 intensity="2">
 
 </a-light>
+
 
 
 
@@ -305,46 +301,36 @@ look-controls="enabled:false">
 
 
 
-<!-- TARGET -->
+<!-- Триггер -->
 
 
 <a-entity
 
 id="target"
 
-mindar-image-target="targetIndex:0">
+mindar-image-target="
+targetIndex:0">
 
 
+<!-- Модель -->
 
 
-
-<!-- GLB -->
-
-
-<a-gltf-model
-
+<a-entity
 
 id="arModel"
 
+gltf-model="./model.glb"
 
-src="./model.glb"
-
-
-position="0 0 1"
-
+position="0 0 0.5"
 
 rotation="0 0 0"
 
+scale="1 1 1"
 
-scale="5 5 5"
-
-
-visible="false"
+visible="false">
 
 
-></a-gltf-model>
-
-
+</a-entity>
 
 
 
@@ -354,8 +340,8 @@ visible="false"
 
 
 
-
 </a-scene>
+
 
 
 
@@ -396,7 +382,7 @@ document.querySelector("#subtitle");
 
 
 
-// Проверка загрузки модели
+// Проверка загрузки GLB
 
 
 model.addEventListener(
@@ -407,6 +393,7 @@ model.addEventListener(
 console.log(
 "MODEL LOADED"
 );
+
 
 
 title.innerHTML =
@@ -422,23 +409,25 @@ subtitle.innerHTML =
 
 
 
+
 model.addEventListener(
 "model-error",
-(error)=>{
+(e)=>{
 
 
 console.error(
 "MODEL ERROR",
-error
+e
 );
 
 
+
 title.innerHTML =
-"Ошибка загрузки GLB";
+"Ошибка модели";
 
 
 subtitle.innerHTML =
-"Проверь model.glb";
+"GLB не загрузился";
 
 
 });
@@ -448,8 +437,7 @@ subtitle.innerHTML =
 
 
 
-
-// Найдено изображение
+// Когда картинка найдена
 
 
 target.addEventListener(
@@ -476,6 +464,15 @@ model.object3D.visible=true;
 
 
 
+// принудительный размер
+
+model.setAttribute(
+"scale",
+"1 1 1"
+);
+
+
+
 dot.classList.add(
 "active"
 );
@@ -486,10 +483,8 @@ status.innerHTML =
 "ТРЕКИНГ: АКТИВЕН";
 
 
-
 title.innerHTML =
 "Модель найдена";
-
 
 
 subtitle.innerHTML =
@@ -506,8 +501,7 @@ subtitle.innerHTML =
 
 
 
-
-// Потерян target
+// Когда картинка потеряна
 
 
 target.addEventListener(
@@ -534,10 +528,8 @@ status.innerHTML =
 "ПОИСК";
 
 
-
 title.innerHTML =
 "Наведите камеру";
-
 
 
 subtitle.innerHTML =
@@ -549,6 +541,22 @@ subtitle.innerHTML =
 );
 
 
+
+
+
+
+// диагностика
+
+
+console.log(
+"AR STARTED"
+);
+
+
+console.log(
+"Model:",
+model
+);
 
 
 </script>
