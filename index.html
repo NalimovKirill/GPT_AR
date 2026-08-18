@@ -1,1180 +1,582 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no"
-  />
-
-  <meta name="theme-color" content="#111111" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-
-  <title>WebAR</title>
-
-  <!-- A-Frame -->
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-
-  <!-- MindAR -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    html,
-    body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background: #000;
-      font-family:
-        -apple-system,
-        BlinkMacSystemFont,
-        "SF Pro Display",
-        "Segoe UI",
-        sans-serif;
-    }
-
-    body {
-      position: relative;
-    }
-
-    /* =========================
-       AR SCENE
-    ========================= */
-
-    a-scene {
-      position: fixed !important;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    /* =========================
-       UI
-    ========================= */
-
-    #ui {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      pointer-events: none;
-      color: #fff;
-    }
-
-    /* =========================
-       TOP STATUS
-    ========================= */
-
-    .top-bar {
-      position: absolute;
-      top: max(24px, env(safe-area-inset-top));
-      left: 20px;
-      right: 20px;
-
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .tracking-status {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-
-      padding: 13px 18px;
 
-      border-radius: 18px;
-
-      background: rgba(25, 25, 25, 0.82);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
-      font-size: 15px;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
-    }
+<title>AR Demo</title>
 
-    .status-dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: #52e878;
+<style>
 
-      box-shadow:
-        0 0 0 4px rgba(82, 232, 120, 0.12),
-        0 0 12px rgba(82, 232, 120, 0.5);
+* {
+  box-sizing:border-box;
+}
 
-      transition: all 0.25s ease;
-    }
+body {
+  margin:0;
+  height:100vh;
+  overflow:hidden;
+  background:#000;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
 
-    .tracking-status.searching .status-dot {
-      background: #f6c453;
 
-      box-shadow:
-        0 0 0 4px rgba(246, 196, 83, 0.12),
-        0 0 12px rgba(246, 196, 83, 0.5);
-    }
+/* Fake camera */
 
-    .tracking-status.error .status-dot {
-      background: #ff5f5f;
+.camera {
+  position:absolute;
+  inset:0;
 
-      box-shadow:
-        0 0 0 4px rgba(255, 95, 95, 0.12),
-        0 0 12px rgba(255, 95, 95, 0.5);
-    }
+  background:
+  linear-gradient(
+    135deg,
+    #444,
+    #111
+  );
 
-    /* Help button */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-    .help-button {
-      pointer-events: auto;
 
-      width: 48px;
-      height: 48px;
+.fake-marker {
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+  width:180px;
+  height:180px;
 
-      border: 0;
-      border-radius: 50%;
+  background:
+  repeating-linear-gradient(
+    45deg,
+    #fff 0,
+    #fff 10px,
+    #111 10px,
+    #111 20px
+  );
 
-      background: rgba(30, 30, 30, 0.82);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+  opacity:.35;
 
-      color: white;
+}
 
-      font-size: 25px;
-      font-weight: 600;
 
-      cursor: pointer;
+/* 3D object demo */
 
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.22);
-    }
+.cube {
 
-    .help-button:active {
-      transform: scale(0.94);
-    }
+ position:absolute;
 
-    /* =========================
-       RIGHT CONTROLS
-    ========================= */
+ width:90px;
+ height:90px;
 
-    .side-controls {
-      position: absolute;
+ background:#4cc3ff;
 
-      right: 20px;
-      bottom: 215px;
+ border-radius:20px;
 
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
+ box-shadow:
+ 0 0 50px #4cc3ff;
 
-    .control-button {
-      pointer-events: auto;
+ transform:
+ perspective(400px)
+ rotateX(25deg)
+ rotateY(35deg);
 
-      width: 82px;
-      min-height: 82px;
+ animation:
+ float 3s infinite ease-in-out;
 
-      border: 0;
-      border-radius: 18px;
+ display:none;
 
-      background: rgba(25, 25, 25, 0.84);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
+}
 
-      color: white;
 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+@keyframes float {
 
-      gap: 6px;
+0%,100%{
+ transform:
+ perspective(400px)
+ rotateX(25deg)
+ rotateY(35deg)
+ translateY(0);
+}
 
-      font-size: 13px;
-      line-height: 1.1;
+50%{
+ transform:
+ perspective(400px)
+ rotateX(25deg)
+ rotateY(35deg)
+ translateY(-40px);
+}
 
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+}
 
-      cursor: pointer;
-    }
 
-    .control-button:active {
-      transform: scale(0.95);
-    }
+/* UI */
 
-    .control-icon {
-      font-size: 25px;
-      line-height: 1;
-    }
+.ui {
 
-    /* =========================
-       BOTTOM MESSAGE
-    ========================= */
+position:absolute;
+inset:0;
 
-    .bottom-message {
-      position: absolute;
+color:white;
 
-      left: 20px;
-      right: 20px;
+}
 
-      bottom: 116px;
 
-      min-height: 90px;
+/* top */
 
-      display: flex;
-      align-items: center;
+.top {
 
-      padding: 18px 20px;
+position:absolute;
 
-      border-radius: 20px;
+top:25px;
+left:20px;
+right:20px;
 
-      background: rgba(30, 30, 30, 0.82);
+display:flex;
 
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
+justify-content:space-between;
 
-      border: 1px solid rgba(255, 255, 255, 0.18);
+}
 
-      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.2);
-    }
 
-    .message-icon {
-      width: 38px;
-      flex-shrink: 0;
+.status {
 
-      font-size: 28px;
-      text-align: center;
-      opacity: 0.95;
-    }
+background:
+rgba(20,20,20,.75);
 
-    .message-content {
-      padding-left: 14px;
-    }
+padding:14px 18px;
 
-    .message-title {
-      font-size: 17px;
-      font-weight: 600;
-      line-height: 1.25;
-    }
+border-radius:20px;
 
-    .message-subtitle {
-      margin-top: 6px;
+display:flex;
 
-      font-size: 14px;
-      line-height: 1.4;
+gap:10px;
 
-      color: rgba(255, 255, 255, 0.72);
-    }
+align-items:center;
 
-    /* =========================
-       BOTTOM NAVIGATION
-    ========================= */
+font-size:15px;
 
-    .bottom-nav {
-      position: absolute;
+}
 
-      left: 0;
-      right: 0;
-      bottom: 0;
 
-      padding:
-        12px
-        18px
-        max(18px, env(safe-area-inset-bottom));
+.dot {
 
-      min-height: 90px;
+width:12px;
+height:12px;
 
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      align-items: center;
+border-radius:50%;
 
-      background: rgba(15, 15, 15, 0.93);
+background:#f5c542;
 
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
+}
 
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
 
-      pointer-events: auto;
-    }
+.dot.active {
 
-    .nav-button {
-      border: 0;
-      background: transparent;
+background:#50e878;
 
-      color: rgba(255, 255, 255, 0.88);
+}
 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
 
-      gap: 6px;
 
-      font-size: 13px;
+/* help */
 
-      cursor: pointer;
-    }
+.help {
 
-    .nav-button:active {
-      transform: scale(0.96);
-    }
+width:45px;
+height:45px;
 
-    .nav-icon {
-      font-size: 23px;
-      line-height: 1;
-    }
+border-radius:50%;
 
-    /* =========================
-       START SCREEN
-    ========================= */
+border:none;
 
-    #start-screen {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
+background:
+rgba(20,20,20,.8);
 
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+color:white;
 
-      padding: 30px;
+font-size:22px;
 
-      background:
-        radial-gradient(
-          circle at center,
-          rgba(75, 75, 75, 0.2),
-          rgba(0, 0, 0, 0.96)
-        );
+}
 
-      color: white;
 
-      text-align: center;
 
-      pointer-events: auto;
-    }
+/* right buttons */
 
-    #start-screen.hidden {
-      display: none;
-    }
+.controls {
 
-    .start-logo {
-      width: 82px;
-      height: 82px;
+position:absolute;
 
-      border-radius: 24px;
+right:20px;
 
-      display: flex;
-      align-items: center;
-      justify-content: center;
+bottom:220px;
 
-      background: rgba(255, 255, 255, 0.08);
+display:flex;
 
-      font-size: 42px;
+flex-direction:column;
 
-      margin-bottom: 24px;
-    }
+gap:12px;
 
-    .start-title {
-      margin: 0;
+}
 
-      font-size: 29px;
-      font-weight: 700;
-    }
 
-    .start-text {
-      max-width: 320px;
+.control {
 
-      margin: 12px 0 28px;
+width:80px;
+height:80px;
 
-      color: rgba(255, 255, 255, 0.68);
+border:none;
 
-      font-size: 16px;
-      line-height: 1.5;
-    }
+border-radius:18px;
 
-    #start {
-      pointer-events: auto;
+background:
+rgba(20,20,20,.8);
 
-      width: 100%;
-      max-width: 320px;
+color:white;
 
-      border: 0;
-      border-radius: 18px;
+font-size:13px;
 
-      padding: 17px 24px;
+}
 
-      background: white;
-      color: #111;
 
-      font-size: 17px;
-      font-weight: 700;
+/* message */
 
-      cursor: pointer;
-    }
+.message {
 
-    #start:active {
-      transform: scale(0.98);
-    }
+position:absolute;
 
-    /* =========================
-       MODAL
-    ========================= */
+left:20px;
+right:20px;
 
-    .modal {
-      position: fixed;
-      inset: 0;
-      z-index: 300;
+bottom:120px;
 
-      display: flex;
-      align-items: flex-end;
+background:
+rgba(20,20,20,.85);
 
-      background: rgba(0, 0, 0, 0.45);
+border-radius:20px;
 
-      opacity: 1;
-      pointer-events: auto;
+padding:20px;
 
-      transition: opacity 0.2s ease;
-    }
+}
 
-    .modal.hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
 
-    .modal-card {
-      width: 100%;
+.message h3 {
 
-      padding:
-        24px
-        24px
-        max(28px, env(safe-area-inset-bottom));
+margin:0 0 8px;
 
-      border-radius: 28px 28px 0 0;
+font-size:17px;
 
-      background: #171717;
+}
 
-      box-shadow: 0 -15px 50px rgba(0, 0, 0, 0.35);
-    }
 
-    .modal-card h2 {
-      margin: 0 0 12px;
+.message p {
 
-      font-size: 22px;
-    }
+margin:0;
 
-    .modal-card p {
-      margin: 0;
+opacity:.7;
 
-      color: rgba(255, 255, 255, 0.7);
+}
 
-      line-height: 1.55;
-      font-size: 15px;
-    }
 
-    .modal-close {
-      margin-top: 22px;
+/* bottom */
 
-      width: 100%;
+.bottom {
 
-      border: 0;
-      border-radius: 16px;
+position:absolute;
 
-      padding: 15px;
+bottom:0;
 
-      background: white;
-      color: #111;
+left:0;
+right:0;
 
-      font-size: 16px;
-      font-weight: 700;
-    }
+height:90px;
 
-    /* =========================
-       UTILS
-    ========================= */
+background:#111;
 
-    .hidden {
-      display: none !important;
-    }
+display:flex;
 
-    @media (min-width: 700px) {
-      .bottom-message {
-        left: 50%;
-        right: auto;
-        transform: translateX(-50%);
-        width: 620px;
-      }
+justify-content:space-around;
 
-      .bottom-nav {
-        max-width: 700px;
-        margin: 0 auto;
-      }
-    }
-  </style>
+align-items:center;
+
+}
+
+
+.nav {
+
+background:none;
+
+border:none;
+
+color:white;
+
+display:flex;
+
+flex-direction:column;
+
+gap:5px;
+
+}
+
+
+/* start */
+
+.start {
+
+position:absolute;
+
+inset:0;
+
+background:#111;
+
+z-index:5;
+
+display:flex;
+
+align-items:center;
+
+justify-content:center;
+
+flex-direction:column;
+
+color:white;
+
+text-align:center;
+
+padding:30px;
+
+}
+
+
+.start h1 {
+
+font-size:32px;
+
+}
+
+
+.start p {
+
+opacity:.7;
+
+max-width:300px;
+
+}
+
+
+.start button {
+
+margin-top:30px;
+
+width:100%;
+
+max-width:300px;
+
+padding:18px;
+
+border-radius:18px;
+
+border:none;
+
+font-size:17px;
+
+font-weight:bold;
+
+}
+
+
+
+.hidden {
+
+display:none;
+
+}
+
+
+</style>
+
 </head>
+
 
 <body>
 
-  <!-- =========================
-       START SCREEN
-  ========================= -->
 
-  <div id="start-screen">
+<div class="camera">
 
-    <div class="start-logo">
-      ◈
-    </div>
+<div class="fake-marker"></div>
 
-    <h1 class="start-title">
-      AR-просмотр
-    </h1>
+<div id="cube" class="cube"></div>
 
-    <p class="start-text">
-      Наведите камеру телефона на изображение-триггер,
-      чтобы увидеть 3D-модель в дополненной реальности.
-    </p>
+</div>
 
-    <button id="start">
-      Запустить AR
-    </button>
 
-  </div>
 
+<div id="start" class="start">
 
-  <!-- =========================
-       AR UI
-  ========================= -->
+<h1>
+AR-просмотр
+</h1>
 
-  <div id="ui">
+<p>
+Наведите камеру на изображение-триггер,
+чтобы увидеть 3D-модель
+</p>
 
-    <!-- TOP -->
 
-    <div class="top-bar">
+<button onclick="startDemo()">
+Запустить AR
+</button>
 
-      <div
-        id="trackingStatus"
-        class="tracking-status searching"
-      >
-        <span class="status-dot"></span>
+</div>
 
-        <span id="statusText">
-          ТРЕКИНГ: ПОИСК
-        </span>
-      </div>
 
-      <button
-        id="helpButton"
-        class="help-button"
-        aria-label="Помощь"
-      >
-        ?
-      </button>
 
-    </div>
+<div class="ui">
 
 
-    <!-- RIGHT CONTROLS -->
+<div class="top">
 
-    <div class="side-controls">
 
-      <button
-        id="modelButton"
-        class="control-button"
-      >
-        <span class="control-icon">◇</span>
-        <span>Модель</span>
-      </button>
+<div class="status">
 
-      <button
-        id="resetButton"
-        class="control-button"
-      >
-        <span class="control-icon">↻</span>
-        <span>Сбросить</span>
-      </button>
+<span id="dot" class="dot"></span>
 
-      <button
-        id="fullscreenButton"
-        class="control-button"
-      >
-        <span class="control-icon">⛶</span>
-        <span>Во весь<br />экран</span>
-      </button>
+<span id="status">
+ТРЕКИНГ: ПОИСК
+</span>
 
-    </div>
+</div>
 
 
-    <!-- MESSAGE -->
+<button class="help">
+?
+</button>
 
-    <div
-      id="bottomMessage"
-      class="bottom-message"
-    >
 
-      <div class="message-icon">
-        ⓘ
-      </div>
+</div>
 
-      <div class="message-content">
-
-        <div
-          id="messageTitle"
-          class="message-title"
-        >
-          Наведите камеру на изображение-триггер
-        </div>
 
-        <div
-          id="messageSubtitle"
-          class="message-subtitle"
-        >
-          3D-модель появится автоматически
-        </div>
 
-      </div>
 
-    </div>
+<div class="controls">
 
 
-    <!-- NAV -->
+<button class="control">
+◇<br>
+Модель
+</button>
 
-    <div class="bottom-nav">
 
-      <button
-        id="instructionButton"
-        class="nav-button"
-      >
-        <span class="nav-icon">ⓘ</span>
-        <span>Инструкция</span>
-      </button>
+<button class="control">
+↻<br>
+Сбросить
+</button>
 
-      <button
-        id="triggerButton"
-        class="nav-button"
-      >
-        <span class="nav-icon">▣</span>
-        <span>Пример триггера</span>
-      </button>
 
-      <button
-        id="settingsButton"
-        class="nav-button"
-      >
-        <span class="nav-icon">⚙</span>
-        <span>Настройки</span>
-      </button>
+<button class="control">
+⛶<br>
+Экран
+</button>
 
-    </div>
 
-  </div>
+</div>
 
 
-  <!-- =========================
-       HELP MODAL
-  ========================= -->
 
-  <div
-    id="helpModal"
-    class="modal hidden"
-  >
 
-    <div class="modal-card">
+<div class="message">
 
-      <h2>
-        Как использовать AR
-      </h2>
+<h3 id="title">
+Наведите камеру на изображение-триггер
+</h3>
 
-      <p>
-        Разрешите доступ к камере и наведите её на
-        изображение-триггер. После распознавания
-        MindAR автоматически разместит 3D-модель
-        поверх изображения.
-      </p>
+<p id="subtitle">
+3D-модель появится автоматически
+</p>
 
-      <button
-        id="closeHelp"
-        class="modal-close"
-      >
-        Понятно
-      </button>
+</div>
 
-    </div>
 
-  </div>
 
 
-  <!-- =========================
-       A-FRAME / MINDAR
-  ========================= -->
+<div class="bottom">
 
-  <a-scene
-    id="scene"
 
-    mindar-image="
-      imageTargetSrc: ./assets/targets.mind;
-      autoStart: false;
-      filterMinCF: 0.1;
-      filterBeta: 10;
-      warmupTolerance: 5;
-      missTolerance: 5;
-    "
+<button class="nav">
+ⓘ
+<br>
+Инструкция
+</button>
 
-    color-space="sRGB"
 
-    renderer="
-      colorManagement: true;
-      physicallyCorrectLights;
-    "
+<button class="nav">
+▣
+<br>
+Триггер
+</button>
 
-    vr-mode-ui="enabled: false"
 
-    device-orientation-permission-ui="enabled: false"
+<button class="nav">
+⚙
+<br>
+Настройки
+</button>
 
-    loading-screen="enabled: false"
-  >
 
-    <!-- ASSETS -->
+</div>
 
-    <a-assets>
 
-      <a-asset-item
-        id="model"
-        src="./assets/model.glb"
-      ></a-asset-item>
+</div>
 
-    </a-assets>
 
 
-    <!-- CAMERA -->
+<script>
 
-    <a-camera
-      position="0 0 0"
-      look-controls="enabled: false"
-    ></a-camera>
 
+function startDemo(){
 
-    <!-- IMAGE TARGET -->
 
-    <a-entity
-      id="target"
-      mindar-image-target="targetIndex: 0"
-    >
+document
+.getElementById("start")
+.classList.add("hidden");
 
-      <a-gltf-model
-        id="arModel"
 
-        src="#model"
+document
+.getElementById("dot")
+.classList.add("active");
 
-        position="0 0 0.05"
 
-        rotation="0 0 0"
+document
+.getElementById("status")
+.innerHTML =
+"ТРЕКИНГ: АКТИВЕН";
 
-        scale="0.2 0.2 0.2"
 
-        visible="false"
-      ></a-gltf-model>
+document
+.getElementById("title")
+.innerHTML =
+"Изображение распознано";
 
-    </a-entity>
 
-  </a-scene>
+document
+.getElementById("subtitle")
+.innerHTML =
+"3D-модель привязана к поверхности";
 
 
-  <!-- =========================
-       JAVASCRIPT
-  ========================= -->
+document
+.getElementById("cube")
+.style.display =
+"block";
 
-  <script>
 
-    const scene =
-      document.querySelector("#scene");
+}
 
-    const target =
-      document.querySelector("#target");
 
-    const model =
-      document.querySelector("#arModel");
 
-    const startButton =
-      document.querySelector("#start");
+</script>
 
-    const startScreen =
-      document.querySelector("#start-screen");
-
-    const trackingStatus =
-      document.querySelector("#trackingStatus");
-
-    const statusText =
-      document.querySelector("#statusText");
-
-    const messageTitle =
-      document.querySelector("#messageTitle");
-
-    const messageSubtitle =
-      document.querySelector("#messageSubtitle");
-
-
-    /*
-     * ============================
-     * HELPERS
-     * ============================
-     */
-
-    function setTrackingState(
-      state,
-      text
-    ) {
-
-      trackingStatus.classList.remove(
-        "searching",
-        "error"
-      );
-
-      if (state === "searching") {
-        trackingStatus.classList.add(
-          "searching"
-        );
-      }
-
-      if (state === "error") {
-        trackingStatus.classList.add(
-          "error"
-        );
-      }
-
-      statusText.textContent = text;
-    }
-
-
-    function setMessage(
-      title,
-      subtitle
-    ) {
-
-      messageTitle.textContent =
-        title;
-
-      messageSubtitle.textContent =
-        subtitle;
-
-    }
-
-
-    /*
-     * ============================
-     * START AR
-     * ============================
-     */
-
-    startButton.addEventListener(
-      "click",
-      async () => {
-
-        try {
-
-          const arSystem =
-            scene.systems[
-              "mindar-image-system"
-            ];
-
-          await arSystem.start();
-
-          startScreen.classList.add(
-            "hidden"
-          );
-
-          setTrackingState(
-            "searching",
-            "ТРЕКИНГ: ПОИСК"
-          );
-
-          setMessage(
-            "Наведите камеру на изображение-триггер",
-            "3D-модель появится автоматически"
-          );
-
-        } catch (error) {
-
-          console.error(error);
-
-          setTrackingState(
-            "error",
-            "ОШИБКА КАМЕРЫ"
-          );
-
-          setMessage(
-            "Не удалось запустить камеру",
-            "Проверьте разрешение камеры и HTTPS"
-          );
-
-        }
-
-      }
-    );
-
-
-    /*
-     * ============================
-     * TARGET FOUND
-     * ============================
-     */
-
-    target.addEventListener(
-      "targetFound",
-      () => {
-
-        model.setAttribute(
-          "visible",
-          true
-        );
-
-        setTrackingState(
-          "active",
-          "ТРЕКИНГ: АКТИВЕН"
-        );
-
-        setMessage(
-          "Изображение распознано",
-          "3D-модель привязана к триггеру"
-        );
-
-      }
-    );
-
-
-    /*
-     * ============================
-     * TARGET LOST
-     * ============================
-     */
-
-    target.addEventListener(
-      "targetLost",
-      () => {
-
-        model.setAttribute(
-          "visible",
-          false
-        );
-
-        setTrackingState(
-          "searching",
-          "ТРЕКИНГ: ПОИСК"
-        );
-
-        setMessage(
-          "Наведите камеру на изображение-триггер",
-          "3D-модель появится автоматически"
-        );
-
-      }
-    );
-
-
-    /*
-     * ============================
-     * MODEL BUTTON
-     * ============================
-     */
-
-    document
-      .querySelector("#modelButton")
-      .addEventListener(
-        "click",
-        () => {
-
-          const visible =
-            model.getAttribute(
-              "visible"
-            );
-
-          model.setAttribute(
-            "visible",
-            !visible
-          );
-
-        }
-      );
-
-
-    /*
-     * ============================
-     * RESET
-     * ============================
-     */
-
-    document
-      .querySelector("#resetButton")
-      .addEventListener(
-        "click",
-        () => {
-
-          model.setAttribute(
-            "position",
-            "0 0 0.05"
-          );
-
-          model.setAttribute(
-            "rotation",
-            "0 0 0"
-          );
-
-          model.setAttribute(
-            "scale",
-            "0.2 0.2 0.2"
-          );
-
-        }
-      );
-
-
-    /*
-     * ============================
-     * FULLSCREEN
-     * ============================
-     */
-
-    document
-      .querySelector("#fullscreenButton")
-      .addEventListener(
-        "click",
-        async () => {
-
-          try {
-
-            if (!document.fullscreenElement) {
-
-              await document.documentElement.requestFullscreen();
-
-            } else {
-
-              await document.exitFullscreen();
-
-            }
-
-          } catch (error) {
-
-            console.warn(
-              "Fullscreen unavailable:",
-              error
-            );
-
-          }
-
-        }
-      );
-
-
-    /*
-     * ============================
-     * HELP
-     * ============================
-     */
-
-    const helpModal =
-      document.querySelector(
-        "#helpModal"
-      );
-
-    document
-      .querySelector("#helpButton")
-      .addEventListener(
-        "click",
-        () => {
-
-          helpModal.classList.remove(
-            "hidden"
-          );
-
-        }
-      );
-
-
-    document
-      .querySelector("#closeHelp")
-      .addEventListener(
-        "click",
-        () => {
-
-          helpModal.classList.add(
-            "hidden"
-          );
-
-        }
-      );
-
-
-    /*
-     * ============================
-     * INSTRUCTION
-     * ============================
-     */
-
-    document
-      .querySelector("#instructionButton")
-      .addEventListener(
-        "click",
-        () => {
-
-          helpModal.classList.remove(
-            "hidden"
-          );
-
-        }
-      );
-
-
-    /*
-     * ============================
-     * TRIGGER
-     * ============================
-     */
-
-    document
-      .querySelector("#triggerButton")
-      .addEventListener(
-        "click",
-        () => {
-
-          alert(
-            "Здесь можно открыть или показать изображение-триггер."
-          );
-
-        }
-      );
-
-
-    /*
-     * ============================
-     * SETTINGS
-     * ============================
-     */
-
-    document
-      .querySelector("#settingsButton")
-      .addEventListener(
-        "click",
-        () => {
-
-          alert(
-            "Здесь можно добавить настройки масштаба, света, звука и модели."
-          );
-
-        }
-      );
-
-  </script>
 
 </body>
 </html>
