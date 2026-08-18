@@ -19,20 +19,33 @@ content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <style>
 
 html,body{
+
 margin:0;
 width:100%;
 height:100%;
 overflow:hidden;
-font-family:Arial,sans-serif;
+
+font-family:
+-apple-system,
+BlinkMacSystemFont,
+"Segoe UI",
+sans-serif;
+
+background:#000;
+
 }
 
 
 #ui{
 
 position:fixed;
+
 inset:0;
-z-index:5;
+
+z-index:10;
+
 color:white;
+
 pointer-events:none;
 
 }
@@ -42,27 +55,36 @@ pointer-events:none;
 .top{
 
 position:absolute;
+
 top:25px;
+
 left:20px;
+
 right:20px;
 
 display:flex;
+
 justify-content:space-between;
 
 }
 
 
+
 .status{
 
-background:rgba(0,0,0,.7);
+background:
+rgba(0,0,0,.75);
 
-padding:12px 18px;
+padding:14px 18px;
 
 border-radius:20px;
 
 font-size:16px;
 
+backdrop-filter:blur(10px);
+
 }
+
 
 
 .dot{
@@ -70,20 +92,25 @@ font-size:16px;
 display:inline-block;
 
 width:12px;
+
 height:12px;
 
-background:#ffcc00;
-
 border-radius:50%;
+
+background:#ffc400;
 
 margin-right:10px;
 
 }
 
 
+
 .dot.active{
 
 background:#00ff66;
+
+box-shadow:
+0 0 15px #00ff66;
 
 }
 
@@ -94,13 +121,15 @@ background:#00ff66;
 pointer-events:auto;
 
 width:45px;
+
 height:45px;
 
 border-radius:50%;
 
-border:none;
+border:0;
 
-background:rgba(0,0,0,.7);
+background:
+rgba(0,0,0,.75);
 
 color:white;
 
@@ -110,7 +139,8 @@ font-size:22px;
 
 
 
-.side{
+
+.controls{
 
 position:absolute;
 
@@ -122,24 +152,28 @@ display:flex;
 
 flex-direction:column;
 
-gap:15px;
+gap:12px;
 
 }
 
 
-.side button{
+
+.controls button{
 
 pointer-events:auto;
 
-background:rgba(0,0,0,.75);
+width:80px;
 
-border:none;
+height:80px;
 
-color:white;
-
-padding:18px;
+border:0;
 
 border-radius:18px;
+
+background:
+rgba(0,0,0,.75);
+
+color:white;
 
 }
 
@@ -150,11 +184,13 @@ border-radius:18px;
 position:absolute;
 
 left:20px;
+
 right:20px;
 
 bottom:110px;
 
-background:rgba(0,0,0,.75);
+background:
+rgba(0,0,0,.75);
 
 border-radius:20px;
 
@@ -166,12 +202,32 @@ text-align:center;
 
 
 
+.message h3{
+
+margin:0 0 8px;
+
+}
+
+
+
+.message p{
+
+margin:0;
+
+opacity:.7;
+
+}
+
+
+
 </style>
 
 </head>
 
 
+
 <body>
+
 
 
 
@@ -183,7 +239,9 @@ text-align:center;
 
 <div class="status">
 
+
 <span id="dot" class="dot"></span>
+
 
 <span id="status">
 ПОИСК ТРИГГЕРА
@@ -202,7 +260,9 @@ text-align:center;
 
 
 
-<div class="side">
+
+<div class="controls">
+
 
 <button>
 ◇<br>
@@ -210,7 +270,7 @@ text-align:center;
 </button>
 
 
-<button>
+<button id="reset">
 ↻<br>
 Сброс
 </button>
@@ -230,7 +290,7 @@ text-align:center;
 
 
 <p id="subtitle">
-3D модель появится автоматически
+Ожидание изображения-триггера
 </p>
 
 
@@ -238,6 +298,8 @@ text-align:center;
 
 
 </div>
+
+
 
 
 
@@ -253,9 +315,13 @@ imageTargetSrc: ./targets.mind;
 
 autoStart: true;
 
-filterMinCF: 0.001;
+uiScanning: true;
 
-filterBeta: 0.01;
+filterMinCF: 0.0001;
+
+filterBeta: 0.001;
+
+maxTrack: 1;
 
 "
 
@@ -265,14 +331,19 @@ color-space="sRGB"
 
 renderer="
 
-colorManagement: true;
+colorManagement:true;
 
-physicallyCorrectLights: true;
+physicallyCorrectLights:true;
+
+antialias:true;
+
+precision:high;
 
 "
 
 
 vr-mode-ui="enabled:false"
+
 
 device-orientation-permission-ui="enabled:false"
 
@@ -298,6 +369,30 @@ src="./model.glb">
 
 
 
+
+<a-light
+
+type="ambient"
+
+intensity="1.5">
+
+</a-light>
+
+
+<a-light
+
+type="directional"
+
+position="1 2 1"
+
+intensity="2">
+
+</a-light>
+
+
+
+
+
 <a-camera
 
 position="0 0 0"
@@ -310,11 +405,13 @@ look-controls="enabled:false">
 
 
 
+
 <a-entity
 
-mindar-image-target="targetIndex:0"
+id="target"
 
-id="target">
+mindar-image-target="
+targetIndex:0">
 
 
 <a-gltf-model
@@ -326,20 +423,19 @@ id="arModel"
 src="#model"
 
 
-position="0 0 0.1"
+position="0 0 0.5"
 
 
-rotation="0 0 0"
+rotation="-90 0 0"
 
 
-scale="0.2 0.2 0.2"
+scale="1 1 1"
 
 
 visible="false"
 
 
 >
-
 
 </a-gltf-model>
 
@@ -348,7 +444,11 @@ visible="false"
 
 
 
+
 </a-scene>
+
+
+
 
 
 
@@ -384,6 +484,53 @@ document.querySelector("#subtitle");
 
 
 
+/*
+Загрузка модели
+*/
+
+
+model.addEventListener(
+"model-loaded",
+()=>{
+
+console.log(
+"GLB MODEL LOADED"
+);
+
+
+}
+);
+
+
+
+model.addEventListener(
+"model-error",
+(e)=>{
+
+console.error(
+"MODEL ERROR",
+e
+);
+
+title.innerHTML =
+"Ошибка модели";
+
+
+subtitle.innerHTML =
+"Не удалось загрузить model.glb";
+
+}
+
+);
+
+
+
+
+
+/*
+Найден target
+*/
+
 
 target.addEventListener(
 
@@ -392,10 +539,17 @@ target.addEventListener(
 ()=>{
 
 
+console.log(
+"TARGET FOUND"
+);
+
+
+
 model.setAttribute(
 "visible",
 true
 );
+
 
 
 dot.classList.add(
@@ -403,16 +557,20 @@ dot.classList.add(
 );
 
 
+
 status.innerHTML =
 "ТРЕКИНГ: АКТИВЕН";
+
 
 
 title.innerHTML =
 "Модель найдена";
 
 
+
 subtitle.innerHTML =
-"AR объект отображается";
+"3D объект отображается";
+
 
 
 }
@@ -422,6 +580,12 @@ subtitle.innerHTML =
 
 
 
+
+
+
+/*
+Потерян target
+*/
 
 
 target.addEventListener(
@@ -437,21 +601,70 @@ false
 );
 
 
+
 dot.classList.remove(
 "active"
 );
+
 
 
 status.innerHTML =
 "ПОИСК ТРИГГЕРА";
 
 
+
 title.innerHTML =
 "Наведите камеру на изображение";
 
 
+
 subtitle.innerHTML =
 "Ожидание распознавания";
+
+
+
+}
+
+);
+
+
+
+
+
+
+/*
+Кнопка сброс
+*/
+
+
+document
+.getElementById("reset")
+.addEventListener(
+
+"click",
+
+()=>{
+
+
+model.setAttribute(
+"position",
+"0 0 0.5"
+);
+
+
+
+model.setAttribute(
+"rotation",
+"-90 0 0"
+);
+
+
+
+model.setAttribute(
+"scale",
+"1 1 1"
+);
+
 
 
 }
